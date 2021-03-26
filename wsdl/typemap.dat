@@ -200,7 +200,7 @@
 #	Uncomment the line below to use std::chrono::system_clock::time_point
 #	for xsd:dateTime.
 #	Then rerun wsdl2h and also compile and link custom/chrono_time_point.c.
-# xsd__dateTime = #import "custom/chrono_time_point.h" | xsd__dateTime
+xsd__dateTime = #import "custom/chrono_time_point.h" | xsd__dateTime
 
 #	Uncomment the line below to use struct tm for xsd:date instead of
 #	mapping xsd:date to string.
@@ -211,7 +211,7 @@
 #	mapping xsd:duration to string (in milliseconds precision).
 #	Then rerun wsdl2h and also compile and link custom/duration.c.
 
-xsd__duration = #import "custom/duration.h" | xsd__duration
+xsd__duration = #import "custom/chrono_duration.h" | xsd__duration
 
 #	Uncomment the line below to use C++11 std::chrono::nanoseconds for
 #	xsd:duration instead of mapping xsd:duration to string.
@@ -240,7 +240,7 @@ xsd__duration = #import "custom/duration.h" | xsd__duration
 #   char *SOAP_ENV__Text; // at least one SOAP-ENV:Text for the gSOAP engine
 #   $int size;
 #   struct SOAP_ENV__Text *SOAP_ENV__Text_; // array of more SOAP-ENV:Text
-# }; 
+# };
 # struct SOAP_ENV__Text
 # {
 #   char *__item;
@@ -487,7 +487,7 @@ vprop	= "http://docs.oasis-open.org/wsbpel/2.0/varprop"
 #	http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl
 #	http://www.onvif.org/onvif/ver10/replay.wsdl
 #	http://www.onvif.org/onvif/ver20/analytics/wsdl/analytics.wsdl
-#	http://www.onvif.org/onvif/ver10/analyticsdevice.wsdl	
+#	http://www.onvif.org/onvif/ver10/analyticsdevice.wsdl
 #	http://www.onvif.org/onvif/ver10/schema/onvif.xsd
 
 tds	= <http://www.onvif.org/ver10/device/wsdl>

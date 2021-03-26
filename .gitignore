@@ -1,45 +1,12 @@
-# Object files
-*.o
-*.o.*
-*.ko
-*.obj
-*.elf
-
-
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-
-
-# Shared objects
-*.so
-*.so.*
-
-
-
-# Binary files
-onvif_srvd
-onvif_srvd_debug
-
-
-
-# SDK files
-SDK/
-gsoap-2.8/
-generated/
-
+_build_/
+.vscode/
 
 # Temp files
 *.*~
 *.pid
 *.log
 *.depend
-
-
+CMakeLists.txt.user
 
 # Files that we don't want to ignore
 !.gitignore

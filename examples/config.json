@@ -1,0 +1,59 @@
+{
+  "network":
+  {
+    "ip": "10.0.0.10",
+    "port": 6789,
+    "user": "admin",
+    "password": "admin",
+    "timeout": 3
+  },
+  "device":
+  {
+    "manufacturer": "Software",
+    "model": "Custom",
+    "serial_num": "1337",
+    "hardware_id": "1337"
+  },
+  "cameras":
+  [
+    {
+      "name": "neolink",
+      "type": "H264",
+      "snapshot_url": "",
+      "streams":
+      [
+        {
+          "name": "main",
+          "url": "rtsp://admin:admin@10.0.0.10:8554/ip-camera-4k/mainStream",
+          "width": 3840,
+          "height": 2160,
+          "framerate": 20
+        },
+        {
+          "name": "preview",
+          "url": "rtsp://admin:admin@10.0.0.10:8554/ip-camera-4k/subStream",
+          "width": 640,
+          "height": 352,
+          "framerate": 20
+        }
+      ],
+      "ptz":
+      {
+          "enabled": false,
+          "move_left": "eval echo pan  forward 5 > /mnt/sdcard/hacks/motor_control/event",
+          "move_right": "eval echo pan  reverse 5 > /mnt/sdcard/hacks/motor_control/event",
+          "move_up": "eval echo tilt forward 5 > /mnt/sdcard/hacks/motor_control/event",
+          "move_down": "eval echo tilt reverse 5 > /mnt/sdcard/hacks/motor_control/event",
+          "move_stop": "",
+          "move_preset": ""
+      }
+    }
+  ],
+  "scopes":
+  [
+    "onvif://www.onvif.org/name/OnvifSrvd",
+    "onvif://www.onvif.org/location/Unknow",
+    "onvif://www.onvif.org/Profile/Streaming",
+    "onvif://www.onvif.org/Profile/S"
+  ]
+}

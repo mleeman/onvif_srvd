@@ -46,7 +46,7 @@
 
 #include <stdint.h>
 #include <stddef.h>  //for offsetof
-
+#include "st.h"
 
 
 
@@ -149,21 +149,7 @@
 
 
 
-
-
-#ifdef  DEBUG
-        #include <stdio.h>
-
-        #define  DEBUG_MSG(...)       printf(__VA_ARGS__)
-        #define  FDEBUG_MSG(fp, ...) fprintf(fp, __VA_ARGS__)
-#else
-        #define  DEBUG_MSG(...)       ({})
-        #define  FDEBUG_MSG(fp, ...)  ({})
-#endif
-
-
-
-#define UNUSED(var) (void)var
+//#define UNUSED(var) (void)var
 
 
 
@@ -178,19 +164,7 @@
 
 
 
-/*
- * gSOAP generate a lot of handlers(callbacks) for ONVIF
- * Most of them are empty. Almost everyone takes two arguments,
- * the second is named the first_name + Response.
- * This macro allows you to write the basic behavior in one line:
- * Disable the compiler warning about unused arguments and
- * display a message for the Debug mode.
- */
-#define  SOAP_EMPTY_HANDLER(arg1, str_prefix)      \
-    UNUSED(arg1);                                  \
-    UNUSED(arg1##Response);                        \
-    DEBUG_MSG(str_prefix ": %s\n", __FUNCTION__);  \
-    return SOAP_OK                                 \
+
 
 
 
