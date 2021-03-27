@@ -28,6 +28,13 @@ private:
     int m_ipMaskPrefix;
 
     void mineInterface();
+    void mineInterfaceHardwareAddress();
+    void mineIpMask();
+
+    void setInterfaceName(const std::string &ifName);
+    void setInterfaceHardwareAddress(const std::string &hwAddress);
+    void setIpMask(const std::string &mask);
+    void setIpMaskPrefix(const int &maskPrefix);
 };
 
 }

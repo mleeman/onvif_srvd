@@ -60,109 +60,125 @@ bool CEthernetDevice::check()
 void CEthernetDevice::mineInterface()
 {
     struct ifaddrs *ifaddr;
-    int family, s, ifRequestFd;
+    int gniResult;
     char host[NI_MAXHOST];
-    char buff[3];
-    char mask[INET_ADDRSTRLEN];
-    uint32_t maskPrefix = 0;
-    int prefix = 0;
-    struct ifreq ifRequest;
-    std::string ifName;
-    std::string ifAddr;
-    std::string hwAddress;
+
 
     if (getifaddrs(&ifaddr) == -1)
     {
         perror("getifaddrs");
-        OSRVD_LOG_ERR("Search interface name failed: getifaddrs failed");
+        OSRVD_LOG_ERR("Search interface name failed: getifaddrs failed: " << strerror(errno));
     }
 
     for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
     {
         if (ifa->ifa_addr == NULL) { continue; }
-        family = ifa->ifa_addr->sa_family;
-        ifName = ifa->ifa_name;
-        if (family == AF_INET || family == AF_INET6)
+        if (ifa->ifa_addr->sa_family == AF_INET)
         {
-            s = getnameinfo(ifa->ifa_addr,
-                    (family == AF_INET) ? sizeof(struct sockaddr_in) :
-                                          sizeof(struct sockaddr_in6),
+            gniResult = getnameinfo(ifa->ifa_addr,
+                    sizeof(struct sockaddr_in),
                     host, NI_MAXHOST,
                     NULL, 0, NI_NUMERICHOST);
-            if (s != 0)
+            if (gniResult == 0)
             {
-                OSRVD_LOG_ERR("Search interface name failed: " << gai_strerror(s));
-            }
-            ifAddr = host;
-            OSRVD_LOG_DBG("Candidate to interface name of address " << ifAddr << ": " << ifName);
-            if(ifAddr == ip())
-            {
-                OSRVD_LOG_DBG("Interface of address " << ip() << " found: " << ifName);
-                freeifaddrs(ifaddr);
-                m_interfaceName = ifName;
-
-                // hw addr
-                int ifRequestFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-                strcpy(ifRequest.ifr_name, interfaceName().c_str());
-                if (0 == ioctl(ifRequestFd, SIOCGIFHWADDR, &ifRequest))
+                OSRVD_LOG_DBG("Candidate to interface name of address " << host << ": " << ifa->ifa_name);
+                if(std::string(host) == ip())
                 {
-                  int i;
-                  for (i = 0; i < 6; ++i)
-                  {
-                    sprintf(buff, "%02x", (unsigned char) ifRequest.ifr_addr.sa_data[i]);
-                    hwAddress += std::string(buff) + std::string(i < 5 ? ":" : "");
-                  }
-                  OSRVD_LOG_DBG("Interface " << interfaceName() << " hardware address: " << hwAddress);
-                  m_interfaceHardwareAddress = hwAddress;
-                }
-                else { /*err*/ }
-                if (0 == ioctl(ifRequestFd, SIOCGIFNETMASK, &ifRequest))
-                {
-                    struct sockaddr_in* addr = (struct sockaddr_in*)&ifRequest.ifr_addr;
-                    if(inet_ntop(AF_INET, &addr->sin_addr, mask, INET_ADDRSTRLEN))
-                    {
-                        m_ipMask = std::string(mask);
-                        OSRVD_LOG_DBG("Mask of ip " << ip() << ": " << m_ipMask);
+                    freeifaddrs(ifaddr);
 
-                        maskPrefix = ntohl(addr->sin_addr.s_addr);
-                        while(maskPrefix != 0)
-                        {
-                            maskPrefix <<= 1;
-                            prefix++;
-                        }
-                        m_ipMaskPrefix = prefix;
-                        OSRVD_LOG_DBG("Prefix of ip " << ip() << ": " << m_ipMaskPrefix);
+                    setInterfaceName(ifa->ifa_name);
+                    mineInterfaceHardwareAddress();
+                    mineIpMask();
 
-                    } else { /* err */ }
+                    return;
                 }
-                else { /*err*/ }
-                return;
             }
+            else { OSRVD_LOG_ERR("Search interface name failed: " << gai_strerror(gniResult)) };
         }
     }
     freeifaddrs(ifaddr);
     OSRVD_LOG_ERR("Can not find interface name if address " << ip());
 }
 
-//void CEthernetDevice::mineInterfaceHardwareAddress()
-//{
-//    std::string hwAddress;
-//    struct ifreq s;
-//    int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-//    char buff[3];
+void CEthernetDevice::mineInterfaceHardwareAddress()
+{
+    struct ifreq ifRequest;
+    int ifRequestFd, ioctlResult;
+    char buff[3];
+    std::string hwAddress;
 
-//    strcpy(s.ifr_name, interfaceName().c_str());
-//    if (0 == ioctl(fd, SIOCGIFHWADDR, &s))
-//    {
-//      int i;
-//      for (i = 0; i < 6; ++i)
-//      {
-//        sprintf(buff, "%02x", (unsigned char) s.ifr_addr.sa_data[i]);
-//        hwAddress += std::string(buff) + std::string(i < 5 ? ":" : "");
-//      }
-//      OSRVD_LOG_DBG("Interface " << interfaceName() << " hardware address: " << hwAddress);
-//      m_interfaceHardwareAddress = hwAddress;
-//    }
-//}
+    ifRequestFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    strcpy(ifRequest.ifr_name, interfaceName().c_str());
+    strcpy(ifRequest.ifr_addr.sa_data, ip().c_str());
+    ioctlResult == ioctl(ifRequestFd, SIOCGIFHWADDR, &ifRequest);
+
+    if (ioctlResult != 0)
+    {
+      int i;
+      for (i = 0; i < 6; ++i)
+      {
+        sprintf(buff, "%02x", (unsigned char) ifRequest.ifr_addr.sa_data[i]);
+        hwAddress += std::string(buff) + std::string(i < 5 ? ":" : "");
+      }
+      setInterfaceHardwareAddress(hwAddress);
+    }
+    else { OSRVD_LOG_ERR("Search interface hardware address failed: " << strerror(errno)); }
+}
+
+void CEthernetDevice::mineIpMask()
+{
+    struct ifreq ifRequest;
+    int ifRequestFd, ioctlResult;
+    char mask[INET_ADDRSTRLEN];
+    int maskPrefix, prefix = 0;
+
+    ifRequestFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    strcpy(ifRequest.ifr_name, interfaceName().c_str());
+    strcpy(ifRequest.ifr_addr.sa_data, ip().c_str());
+    ioctlResult = ioctl(ifRequestFd, SIOCGIFNETMASK, &ifRequest);
+
+    if (ioctlResult == 0)
+    {
+        struct sockaddr_in* addr = (struct sockaddr_in*)&ifRequest.ifr_addr;
+        if(inet_ntop(AF_INET, &addr->sin_addr, mask, INET_ADDRSTRLEN))
+        {
+            setIpMask(mask);
+
+            maskPrefix = ntohl(addr->sin_addr.s_addr);
+            while(maskPrefix != 0)
+            {
+                maskPrefix <<= 1;
+                prefix++;
+            }
+            setIpMaskPrefix(prefix);
+        }
+        else { OSRVD_LOG_ERR("Search interface mask failed: " << strerror(errno)); }
+    }
+    else { OSRVD_LOG_ERR("Search interface mask failed: " << strerror(errno)); }
+}
+
+void CEthernetDevice::setInterfaceName(const std::string &ifName)
+{
+    m_interfaceName = ifName;
+    OSRVD_LOG_NFO("Interface of address " << ip() << " found: " << m_interfaceName);
+}
+
+void CEthernetDevice::setInterfaceHardwareAddress(const std::string &hwAddress)
+{
+    m_interfaceHardwareAddress = hwAddress;
+    OSRVD_LOG_NFO("Interface " << interfaceName() << " hardware address: " << m_interfaceHardwareAddress);
+}
+
+void CEthernetDevice::setIpMask(const std::string &mask)
+{
+    m_ipMask = mask;
+    OSRVD_LOG_NFO("Mask of ip " << ip() << ": " << m_ipMask);
+}
+
+void CEthernetDevice::setIpMaskPrefix(const int &maskPrefix)
+{
+    m_ipMaskPrefix = maskPrefix;
+    OSRVD_LOG_NFO("Prefix of ip " << ip() << ": " << m_ipMaskPrefix);
+}
 
 }

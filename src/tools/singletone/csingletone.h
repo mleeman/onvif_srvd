@@ -22,7 +22,6 @@ public:
    static CSingleTone &instance();
    void destruct();
    void quit(const std::string &message = "");
-   const char *applicationName() const;
 
 private:
     CSingleTone();

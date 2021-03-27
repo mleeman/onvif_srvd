@@ -1,6 +1,7 @@
 #include "clogger.h"
 #include "tools/tools_string.h"
 #include "tools/tools_fs.h"
+#include "version.h"
 #include "st.h"
 
 #include <iomanip>
@@ -17,7 +18,7 @@ namespace logger
 
 CLogger::CLogger()
 {
-    std::string logPath = std::string(OSRVD_LOG_DIR "/") + std::string(OSRVD_ST.applicationName()) + std::string("/");
+    std::string logPath = std::string(OSRVD_LOG_DIR "/" OSRVD_NAME "/");
     if (!osrvd::tools::fs::file_exists(logPath)) { osrvd::tools::fs::create_path(logPath); }
     m_filepart = logPath + osrvd::tools::string::formatted_current_datetime("%Y-%m-%d_%H-%M-%S");
     m_filename = m_filepart + ".application.log";

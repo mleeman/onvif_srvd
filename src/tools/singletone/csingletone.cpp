@@ -16,11 +16,6 @@ CSingleTone &CSingleTone::instance()
     return instance;
 }
 
-const char *CSingleTone::applicationName() const
-{
-    return "onvif_srvd";
-}
-
 void CSingleTone::destruct()
 {
     delete this;
