@@ -1,0 +1,26 @@
+Source: onvif-srvd
+Section: misc
+Priority: optional
+Maintainer: Marc Leeman <m.leeman@televic.com>
+Build-Depends: debhelper (>= 10),
+               lsb-release,
+               flex,
+               bison,
+               byacc,
+               make,
+               m4,
+               gsoap,
+               libgsoap-dev,
+Homepage: http://www.televic.com
+Standards-Version: 4.3.0
+Vcs-Git: https://bitbucket.televic.com/scm/tradebianos/onvif-srvd.git
+Vcs-Browser: https://bitbucket.televic.com/projects/tradebianos/repos/onvif-srvd/browse
+X-Jenkins: https://srv-tra-bld-lnx4.televic.com/job/onvif-srvd/
+
+Package: onvif-srvd
+Architecture: any
+Depends: lsb-base (>= 3.0-10),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Onvif Server
+ Simple ONVIF Server to use with an RTSP backend
