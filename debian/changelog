@@ -1,0 +1,5 @@
+onvif-srvd (0.0.1~televic10+1) buster-televic-unstable; urgency=medium
+
+  * Initial release
+
+ -- Marc Leeman <m.leeman@televic.com>  Mon, 19 Apr 2021 15:18:31 +0200
