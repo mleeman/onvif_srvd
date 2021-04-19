@@ -8,16 +8,14 @@ DAEMON_NO_CHDIR       = 1
 DAEMON_NO_CLOSE_STDIO = 0
 
 
-GSOAP_VERSION     = 2.8.92
-GSOAP_INSTALL_DIR = ./gsoap-2.8
-GSOAP_DIR         = $(GSOAP_INSTALL_DIR)/gsoap
+GSOAP_DIR         = /usr/share/gsoap
 GSOAP_CUSTOM_DIR  = $(GSOAP_DIR)/custom
 GSOAP_PLUGIN_DIR  = $(GSOAP_DIR)/plugin
 GSOAP_IMPORT_DIR  = $(GSOAP_DIR)/import
 
 
-SOAPCPP2          = $(GSOAP_DIR)/src/soapcpp2
-WSDL2H            = $(GSOAP_DIR)/wsdl/wsdl2h
+SOAPCPP2          = soapcpp2
+WSDL2H            = wsdl2h
 GSOAP_CONFIGURE   = --disable-c-locale
 
 
@@ -38,12 +36,9 @@ CXXFLAGS         += -I$(COMMON_DIR)
 CXXFLAGS         += -I$(GENERATED_DIR)
 CXXFLAGS         += -I$(GSOAP_DIR) -I$(GSOAP_CUSTOM_DIR) -I$(GSOAP_PLUGIN_DIR) -I$(GSOAP_IMPORT_DIR)
 CXXFLAGS         += -std=c++11 -O2  -Wall  -pipe
+LIBS             = /usr/lib/x86_64-linux-gnu/libgsoap++.a
 
 CXX              ?= g++
-
-
-
-
 
 # To build a daemon with WS-Security support,
 # call make with the WSSE_ON=1 parameter
@@ -62,17 +57,7 @@ else
 GSOAP_CONFIGURE += --disable-ssl
 endif
 
-
-
-
-
-
-
-SOAP_SRC = $(GSOAP_DIR)/stdsoap2.cpp        \
-           $(GSOAP_DIR)/dom.cpp             \
-           $(GSOAP_CUSTOM_DIR)/duration.c
-
-
+SOAP_SRC = $(GENERATED_DIR)/duration.c
 
 # We can't use wildcard func, this files will be generated
 SOAP_SERVICE_SRC = $(GENERATED_DIR)/soapDeviceBindingService.cpp \
@@ -96,11 +81,6 @@ SOURCES  = $(COMMON_DIR)/daemon.c                 \
            $(SOAP_SERVICE_SRC)                    \
            $(WSSE_SOURCES)
 
-
-
-
-
-
 OBJECTS  := $(patsubst %.c,  %.o, $(SOURCES) )
 OBJECTS  := $(patsubst %.cpp,%.o, $(OBJECTS) )
 OBJECTS  := $(patsubst %.S,  %.o, $(OBJECTS) )
@@ -111,16 +91,11 @@ DEBUG_SUFFIX   = debug
 DEBUG_OBJECTS := $(patsubst %.o, %_$(DEBUG_SUFFIX).o, $(OBJECTS) )
 
 
-
-
 WSDL_FILES = $(wildcard wsdl/*.wsdl wsdl/*.xsd)
 
 
-
-
 .PHONY: all
-all: debug release
-
+all: release
 
 
 .PHONY: release
@@ -217,8 +192,8 @@ endif
 # ---- gSOAP ----
 
 $(GENERATED_DIR)/onvif.h:
-	@$(build_gsoap)
 	@mkdir -p $(GENERATED_DIR)
+	@cp $(GSOAP_CUSTOM_DIR)/duration.c $(GENERATED_DIR)
 	$(WSDL2H) -d -t ./wsdl/typemap.dat  -o $@  $(WSDL_FILES)
 	$(WSSE_IMPORT)
 
@@ -248,37 +223,9 @@ endef
 
 define build_bin
     @$(BUILD_ECHO)
-    $(CXX)  $1 -o $@  $(CXXFLAGS)
+    $(CXX)  $1 -o $@  $(CXXFLAGS) $(LIBS)
     @echo "\n---- Compiled $@ ver $(DAEMON_MAJOR_VERSION).$(DAEMON_MINOR_VERSION).$(DAEMON_PATCH_VERSION) ----\n"
 endef
-
-
-
-define build_gsoap
-
-    # get archive
-    if [ ! -f SDK/gsoap.zip ]; then \
-        mkdir -p SDK; \
-        wget -O ./SDK/gsoap.zip.tmp "https://sourceforge.net/projects/gsoap2/files/gsoap-2.8/gsoap_$(GSOAP_VERSION).zip/download"   || \
-        wget -O ./SDK/gsoap.zip.tmp "https://sourceforge.net/projects/gsoap2/files/oldreleases/gsoap_$(GSOAP_VERSION).zip/download" || \
-        wget -O ./SDK/gsoap.zip.tmp "https://master.dl.sourceforge.net/project/gsoap2/oldreleases/gsoap_$(GSOAP_VERSION).zip"       && \
-        mv ./SDK/gsoap.zip.tmp ./SDK/gsoap.zip; \
-    fi
-
-    # unzip
-    if [ ! -f $(GSOAP_INSTALL_DIR)/README.txt ]; then \
-         unzip ./SDK/gsoap.zip; \
-    fi
-
-    # build
-    if [ ! -f $(SOAPCPP2) ] || [ ! -f $(WSDL2H) ]; then \
-         cd $(GSOAP_INSTALL_DIR); \
-         ./configure $(GSOAP_CONFIGURE) && \
-         make -j1; \
-         cd ..;\
-    fi
-endef
-
 
 
 
