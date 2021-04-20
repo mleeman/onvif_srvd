@@ -25,5 +25,5 @@ Architecture: any
 Depends: lsb-base (>= 3.0-10),
          ${misc:Depends},
          ${shlibs:Depends}
-Description: Onvif Server
+Description: ONVIF Device (IP camera) Service server
  Simple ONVIF Server to use with an RTSP backend
