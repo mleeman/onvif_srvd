@@ -44,6 +44,7 @@ CXX              ?= g++
 # call make with the WSSE_ON=1 parameter
 # example:
 # make WSSE_ON=1 all
+WSSE_ON=1
 ifdef WSSE_ON
 CXXFLAGS        += -DWITH_OPENSSL -lssl -lcrypto -lz
 
