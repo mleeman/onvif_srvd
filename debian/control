@@ -11,11 +11,14 @@ Build-Depends: debhelper (>= 10),
                m4,
                gsoap,
                libgsoap-dev,
+               openssl,
+               libssl-dev,
+               zlib1g-dev,
+               libcrypto++6
 Homepage: http://www.televic.com
 Standards-Version: 4.3.0
-Vcs-Git: https://bitbucket.televic.com/scm/tradebianos/onvif-srvd.git
-Vcs-Browser: https://bitbucket.televic.com/projects/tradebianos/repos/onvif-srvd/browse
-X-Jenkins: https://srv-tra-bld-lnx4.televic.com/job/onvif-srvd/
+Vcs-Git: https://github.com/mleeman/onvif_srvd.git
+Vcs-Browser: https://github.com/mleeman/onvif_srvd
 
 Package: onvif-srvd
 Architecture: any
