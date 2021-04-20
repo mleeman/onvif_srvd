@@ -1,3 +1,15 @@
-Copyright (C) 2019 Televic <http://www.televic.com/>
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: onvif_srvd
+Upstream-Contact: Stas Konyov <skojnov@yandex.ru>
+Source: https://github.com/KoynovStas/onvif_srvd
+License: BSD-3-clause
 
-License: Proprietary
+Files: *
+Copyright:
+ (c) 2017-2021 Stas Konyov
+License: BSD-3-clause
+
+Files: *
+Copyright:
+ (c) 2021 Marc Leeman <marc.leeman@gmail.com>
+License: BSD-3-clause
