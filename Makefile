@@ -36,7 +36,7 @@ CXXFLAGS         += -I$(COMMON_DIR)
 CXXFLAGS         += -I$(GENERATED_DIR)
 CXXFLAGS         += -I$(GSOAP_DIR) -I$(GSOAP_CUSTOM_DIR) -I$(GSOAP_PLUGIN_DIR) -I$(GSOAP_IMPORT_DIR)
 CXXFLAGS         += -std=c++11 -O2  -Wall  -pipe
-LIBS             = /usr/lib/x86_64-linux-gnu/libgsoap++.a
+CXXFLAGS         += -lgsoapssl++
 
 CXX              ?= g++
 
