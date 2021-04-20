@@ -1,12 +1,12 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: onvif_srvd
-Upstream-Contact: Stas Konyov <skojnov@yandex.ru>
+Upstream-Contact: Stas Koynov <skojnov@yandex.ru>
 Source: https://github.com/KoynovStas/onvif_srvd
 License: BSD-3-clause
 
 Files: *
 Copyright:
- (c) 2017-2021 Stas Konyov
+ (c) 2017-2021 Stas Koynov
 License: BSD-3-clause
 
 Files: *
