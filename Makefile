@@ -57,7 +57,8 @@ else
 GSOAP_CONFIGURE += --disable-ssl
 endif
 
-SOAP_SRC = $(GENERATED_DIR)/duration.c
+SOAP_SRC = $(GENERATED_DIR)/duration.c \
+						$(GENERATED_DIR)/struct_timeval.c
 
 # We can't use wildcard func, this files will be generated
 SOAP_SERVICE_SRC = $(GENERATED_DIR)/soapDeviceBindingService.cpp \
@@ -79,7 +80,6 @@ SOURCES  = $(COMMON_DIR)/daemon.c                 \
            $(GENERATED_DIR)/soapC.cpp             \
            $(SOAP_SRC)                            \
            $(SOAP_SERVICE_SRC)                    \
-           $(WSSE_SOURCES)
 
 OBJECTS  := $(patsubst %.c,  %.o, $(SOURCES) )
 OBJECTS  := $(patsubst %.cpp,%.o, $(OBJECTS) )
@@ -194,6 +194,7 @@ endif
 $(GENERATED_DIR)/onvif.h:
 	@mkdir -p $(GENERATED_DIR)
 	@cp $(GSOAP_CUSTOM_DIR)/duration.c $(GENERATED_DIR)
+	@cp $(GSOAP_CUSTOM_DIR)/struct_timeval.c $(GENERATED_DIR)
 	$(WSDL2H) -d -t ./wsdl/typemap.dat  -o $@  $(WSDL_FILES)
 	$(WSSE_IMPORT)
 
@@ -223,7 +224,7 @@ endef
 
 define build_bin
     @$(BUILD_ECHO)
-    $(CXX)  $1 -o $@  $(CXXFLAGS) $(LIBS)
+    $(CXX)  $1 -o $@  $(CXXFLAGS)
     @echo "\n---- Compiled $@ ver $(DAEMON_MAJOR_VERSION).$(DAEMON_MINOR_VERSION).$(DAEMON_PATCH_VERSION) ----\n"
 endef
 
