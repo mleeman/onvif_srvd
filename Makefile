@@ -48,11 +48,6 @@ WSSE_ON=1
 ifdef WSSE_ON
 CXXFLAGS        += -DWITH_OPENSSL -lssl -lcrypto -lz
 
-WSSE_SOURCES     = $(GSOAP_PLUGIN_DIR)/wsseapi.c \
-                   $(GSOAP_PLUGIN_DIR)/mecevp.c  \
-                   $(GSOAP_PLUGIN_DIR)/smdevp.c  \
-                   $(GSOAP_PLUGIN_DIR)/wsaapi.c
-
 WSSE_IMPORT      = echo '\#import "wsse.h" ' >> $@
 else
 GSOAP_CONFIGURE += --disable-ssl
@@ -207,7 +202,7 @@ $(GENERATED_DIR)/soapC.cpp: $(GENERATED_DIR)/onvif.h
 
 
 # This targets is needed for parallel work of make
-$(OBJECTS) $(DEBUG_OBJECTS) $(SOAP_SRC) $(SOAP_SERVICE_SRC) $(WSSE_SOURCES): $(GENERATED_DIR)/soapC.cpp
+$(OBJECTS) $(DEBUG_OBJECTS) $(SOAP_SRC) $(SOAP_SERVICE_SRC): $(GENERATED_DIR)/soapC.cpp
 
 
 
