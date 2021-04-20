@@ -1,0 +1,24 @@
+[Unit]
+Description=ONVIF Device (IP camera) Service server
+After=syslog.target
+After=network-online.target
+
+[Service]
+Type=forking
+WorkingDirectory=/var/lib/onvif-srvd
+PIDFile=/run/onvif_srvd.pid
+ExecStart=/usr/bin/onvif_srvd \
+	--pid_file /run/onvif_srvd.pid \
+	--ifs br0 \
+	--scope onvif://www.onvif.org/name/TelevicRelay \
+	--scope onvif://www.onvif.org/location/Brussels \
+	--scope onvif://www.onvif.org/Profile/Streaming \
+	--scope onvif://www.onvif.org/Profile/S \
+	--name RTSP --width 1200 --height 720 --url rtsp://%%s:554/unicast --type H264
+TimeoutSec=4
+Restart=always
+RestartSec=2
+StartLimitBurst=0
+
+[Install]
+WantedBy=multi-user.target
