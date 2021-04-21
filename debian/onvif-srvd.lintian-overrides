@@ -1,1 +1,2 @@
 onvif-srvd: no-manual-page
+onvif-srvd: init.d-script-not-included-in-package
