@@ -1,3 +1,28 @@
+onvif-srvd (0.0.1~televic10+2) buster-televic-unstable; urgency=medium
+
+  * Makefile: hack in gsoap system libraries
+  * install onvif server
+  * Makefile: dynamic linking to lgsoapssl++
+  * Makefile: fix linking problems (ugly way)
+  * Makefile: default with WSSE support
+  * debian: compile for WSSE
+  * debian: update description
+  * debian: add service file
+  * debian: add README.md in docs
+  * debian: correct copyright
+  * debian: correct name
+  * Makefile: no need to copy in lib files
+  * Makefile: whitespace
+  * lintian: systemd-service-file-refers-to-obsolete-target
+  * lintian: build-depends-on-build-essential-package-without-using-version
+  * lintian: global-files-wildcard-not-first-paragraph-in-dep5-copyright
+  * lintian: no-manual-page
+  * lintian: init.d-script-not-included-in-package
+  * debian: correct copyright format for debian
+  * control: add version restriction for gsoap
+
+ -- Marc Leeman <m.leeman@televic.com>  Wed, 21 Apr 2021 10:10:42 +0200
+
 onvif-srvd (0.0.1~televic10+1) buster-televic-unstable; urgency=medium
 
   * Initial release
