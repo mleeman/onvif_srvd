@@ -14,7 +14,7 @@ ExecStart=/usr/bin/onvif_srvd \
 	--pid_file /run/onvif_srvd.pid \
 	--ifs ${INTERFACE} \
 	--scope onvif://www.onvif.org/name/TelevicRelay \
-	--scope onvif://www.onvif.org/location/Brussels \
+	--scope onvif://www.onvif.org/location/ANY \
 	--scope onvif://www.onvif.org/Profile/Streaming \
 	--scope onvif://www.onvif.org/Profile/S \
 	--name ${RTSP_NAME} --width 1200 --height 720 --url ${RTSP_URI} --type H264
