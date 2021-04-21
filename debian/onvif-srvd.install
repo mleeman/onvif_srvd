@@ -1,1 +1,2 @@
-onvif_srvd /usr/bin/
+onvif_srvd             /usr/bin/
+data/onvif-srvd/*      /
