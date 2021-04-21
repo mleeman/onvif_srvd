@@ -1,3 +1,9 @@
+onvif-srvd (0.0.1~televic10+3) buster-televic-unstable; urgency=medium
+
+  * debian: use buster style lintian-overrides
+
+ -- Marc Leeman <m.leeman@televic.com>  Wed, 21 Apr 2021 10:45:06 +0200
+
 onvif-srvd (0.0.1~televic10+2) buster-televic-unstable; urgency=medium
 
   * Makefile: hack in gsoap system libraries
