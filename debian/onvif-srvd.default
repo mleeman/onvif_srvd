@@ -1,0 +1,3 @@
+RTSP_NAME=RTSP
+RTSP_URI=rtsp://%%s:554/unicast
+INTERFACE=eth0
