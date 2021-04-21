@@ -1,0 +1,1 @@
+add rule inet filter input tcp dport 1000 counter accept
