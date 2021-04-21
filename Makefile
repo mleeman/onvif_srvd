@@ -83,9 +83,7 @@ OBJECTS  := $(patsubst %.S,  %.o, $(OBJECTS) )
 
 
 DEBUG_SUFFIX   = debug
-
 DEBUG_OBJECTS := $(patsubst %.o, %_$(DEBUG_SUFFIX).o, $(OBJECTS) )
-
 
 WSDL_FILES = $(wildcard wsdl/*.wsdl wsdl/*.xsd)
 
@@ -93,12 +91,9 @@ WSDL_FILES = $(wildcard wsdl/*.wsdl wsdl/*.xsd)
 .PHONY: all
 all: release
 
-
 .PHONY: release
 release: CXXFLAGS := -s  $(CXXFLAGS)
 release: $(DAEMON_NAME)
-
-
 
 .PHONY: debug
 debug: DAEMON_NO_CLOSE_STDIO = 1
