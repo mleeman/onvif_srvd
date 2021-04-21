@@ -1,3 +1,3 @@
 RTSP_NAME=RTSP
-RTSP_URI=rtsp://%%s:554/test
+RTSP_URI=rtsp://%s:554/test
 INTERFACE=eth0
