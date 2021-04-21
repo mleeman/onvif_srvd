@@ -1,2 +1,2 @@
-onvif-srvd: no-manual-page
+onvif-srvd: binary-without-manpage
 onvif-srvd: init.d-script-not-included-in-package
