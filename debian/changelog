@@ -1,3 +1,9 @@
+onvif-srvd (1.1.0~televic10+2) buster-televic-unstable; urgency=medium
+
+  * default: no double percent
+
+ -- Marc Leeman <m.leeman@televic.com>  Wed, 21 Apr 2021 14:31:04 +0200
+
 onvif-srvd (1.1.0~televic10+1) buster-televic-unstable; urgency=medium
 
   * bump version to match upstream
