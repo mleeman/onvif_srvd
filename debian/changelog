@@ -1,3 +1,10 @@
+onvif-srvd (1.1.0~televic10+1) buster-televic-unstable; urgency=medium
+
+  * bump version to match upstream
+  * systemd: start with ANY timezone
+
+ -- Marc Leeman <m.leeman@televic.com>  Wed, 21 Apr 2021 14:07:26 +0200
+
 onvif-srvd (0.0.1~televic10+4) buster-televic-unstable; urgency=medium
 
   * debian: add environment file
