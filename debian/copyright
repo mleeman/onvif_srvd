@@ -9,7 +9,7 @@ Copyright:
  (c) 2017-2021 Stas Koynov
 License: BSD-3-clause
 
-Files: *
+Files: debian/*
 Copyright:
  (c) 2021 Marc Leeman <marc.leeman@gmail.com>
 License: BSD-3-clause
