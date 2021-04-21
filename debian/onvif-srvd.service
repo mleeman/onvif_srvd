@@ -1,6 +1,5 @@
 [Unit]
 Description=ONVIF Device (IP camera) Service server
-After=syslog.target
 After=network-online.target
 
 [Service]
