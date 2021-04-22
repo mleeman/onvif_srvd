@@ -456,7 +456,7 @@ void processing_cmd(int argc, char *argv[])
 void check_service_ctx(void)
 {
     if(service_ctx.eth_ifs.empty())
-        daemon_error_exit("Error: not set no one ehternet interface more details see opt --ifs\n");
+        daemon_error_exit("Error: not set no one ethernet interface more details see opt --ifs\n");
 
 
     if(service_ctx.scopes.empty())
