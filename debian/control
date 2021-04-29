@@ -5,6 +5,8 @@ Maintainer: Marc Leeman <m.leeman@televic.com>
 Build-Depends: debhelper (>= 10),
                lsb-release,
                flex,
+               cmake,
+               libjsoncpp-dev,
                bison,
                byacc,
                m4,

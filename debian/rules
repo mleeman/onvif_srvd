@@ -4,4 +4,4 @@
 include /usr/share/dpkg/default.mk
 
 %:
-	dh $@
+	dh $@ --buildsystem=cmake
