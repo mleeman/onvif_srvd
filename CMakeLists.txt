@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 project(onvif_server_daemon)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
@@ -25,7 +25,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/generated)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/onvif.h
     COMMAND ${GSOAP_WSDL2H} -c++11 -d -t ${CMAKE_SOURCE_DIR}/wsdl/typemap.dat -o ${CMAKE_BINARY_DIR}/generated/onvif.h ${CMAKE_SOURCE_DIR}/wsdl/*.wsdl ${CMAKE_SOURCE_DIR}/wsdl/*.xsd
-    COMMENT "Creationg gSOAP binding file"
+    COMMENT "Creating gSOAP binding file"
 )
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/onvifDeviceBindingService.cpp ${CMAKE_BINARY_DIR}/generated/onvifMediaBindingService.cpp ${CMAKE_BINARY_DIR}/generated/onvifPTZBindingService.cpp ${CMAKE_BINARY_DIR}/generated/onvifC.cpp
