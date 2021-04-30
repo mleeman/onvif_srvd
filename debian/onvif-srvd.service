@@ -12,6 +12,7 @@ WorkingDirectory=/var/lib/onvif-srvd
 PIDFile=/run/onvif_srvd.pid
 ExecStart=/usr/bin/onvif_srvd \
 	--pid_file /run/onvif_srvd.pid \
+  --port 80 \
 	--ifs ${INTERFACE} \
 	--scope onvif://www.onvif.org/name/TelevicRelay \
 	--scope onvif://www.onvif.org/location/ANY \
