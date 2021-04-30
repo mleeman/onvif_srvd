@@ -46,15 +46,22 @@ CXX              ?= g++
 # make WSSE_ON=1 all
 WSSE_ON=1
 ifdef WSSE_ON
-CXXFLAGS        += -DWITH_OPENSSL -lssl -lcrypto -lz
+CXXFLAGS        += -DWITH_OPENSSL -DWITH_DOM -DWITH_GZIP -lssl -lcrypto -lz
+
+WSSE_SOURCES     = $(GENERATED_DIR)/wsseapi.c \
+                   $(GENERATED_DIR)/mecevp.c  \
+                   $(GENERATED_DIR)/smdevp.c  \
+                   $(GENERATED_DIR)/wsaapi.c
 
 WSSE_IMPORT      = echo '\#import "wsse.h" ' >> $@
 else
 GSOAP_CONFIGURE += --disable-ssl
 endif
 
-SOAP_SRC = $(GENERATED_DIR)/duration.c \
-						$(GENERATED_DIR)/struct_timeval.c
+SOAP_SRC = $(COMMON_DIR)/stdsoap2.cpp \
+					 $(COMMON_DIR)/dom.cpp \
+					 $(GENERATED_DIR)/duration.c \
+					 $(GENERATED_DIR)/struct_timeval.c
 
 # We can't use wildcard func, this files will be generated
 SOAP_SERVICE_SRC = $(GENERATED_DIR)/soapDeviceBindingService.cpp \
@@ -76,6 +83,7 @@ SOURCES  = $(COMMON_DIR)/daemon.c                 \
            $(GENERATED_DIR)/soapC.cpp             \
            $(SOAP_SRC)                            \
            $(SOAP_SERVICE_SRC)                    \
+           $(WSSE_SOURCES)
 
 OBJECTS  := $(patsubst %.c,  %.o, $(SOURCES) )
 OBJECTS  := $(patsubst %.cpp,%.o, $(OBJECTS) )
@@ -184,8 +192,8 @@ endif
 
 $(GENERATED_DIR)/onvif.h:
 	@mkdir -p $(GENERATED_DIR)
-	@cp $(GSOAP_CUSTOM_DIR)/duration.c $(GENERATED_DIR)
-	@cp $(GSOAP_CUSTOM_DIR)/struct_timeval.c $(GENERATED_DIR)
+	@cp $(GSOAP_CUSTOM_DIR)/duration.c $(GSOAP_CUSTOM_DIR)/struct_timeval.c $(GENERATED_DIR)
+	@cp $(GSOAP_PLUGIN_DIR)/wsseapi.c $(GSOAP_PLUGIN_DIR)/mecevp.c  $(GSOAP_PLUGIN_DIR)/smdevp.c  $(GSOAP_PLUGIN_DIR)/wsaapi.c $(GENERATED_DIR)
 	$(WSDL2H) -d -t ./wsdl/typemap.dat  -o $@  $(WSDL_FILES)
 	$(WSSE_IMPORT)
 
@@ -197,7 +205,7 @@ $(GENERATED_DIR)/soapC.cpp: $(GENERATED_DIR)/onvif.h
 
 
 # This targets is needed for parallel work of make
-$(OBJECTS) $(DEBUG_OBJECTS) $(SOAP_SRC) $(SOAP_SERVICE_SRC): $(GENERATED_DIR)/soapC.cpp
+$(OBJECTS) $(DEBUG_OBJECTS) $(SOAP_SRC) $(SOAP_SERVICE_SRC) $(WSSE_SOURCES): $(GENERATED_DIR)/soapC.cpp
 
 
 
