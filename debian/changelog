@@ -1,3 +1,11 @@
+onvif-srvd (1.1.0~televic10+3) buster-televic-unstable; urgency=medium
+
+  * debian: update description stream
+  * onvif_srvd: fix typo
+  * Makefile: enable wsse for onvif device manager
+
+ -- Marc Leeman <m.leeman@televic.com>  Fri, 30 Apr 2021 09:43:19 +0200
+
 onvif-srvd (1.1.0~televic10+2) buster-televic-unstable; urgency=medium
 
   * default: no double percent
