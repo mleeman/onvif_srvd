@@ -1,8 +1,8 @@
-onvif-srvd (1.1.0~televic10+4) buster-televic-unstable; urgency=medium
+onvif-srvd (1.1.0~televic10+5) buster-televic-unstable; urgency=medium
 
   * data: run device discovery on port 80 for windows tool
 
- -- Marc Leeman <m.leeman@televic.com>  Fri, 30 Apr 2021 09:51:26 +0200
+ -- Marc Leeman <m.leeman@televic.com>  Fri, 30 Apr 2021 10:04:37 +0200
 
 onvif-srvd (1.1.0~televic10+3) buster-televic-unstable; urgency=medium
 
