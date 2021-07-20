@@ -13,7 +13,7 @@ Build-Depends: debhelper (>= 10),
                openssl,
                libssl-dev,
                zlib1g-dev,
-               libcrypto++6
+               libcrypto++-dev
 Homepage: http://www.televic.com
 Standards-Version: 4.3.0
 Vcs-Git: https://github.com/mleeman/onvif_srvd.git
