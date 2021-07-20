@@ -1,3 +1,9 @@
+onvif-srvd (1.1.0~televic11+1) bullseye-televic-unstable; urgency=medium
+
+  * debian: depend on generic libcrypto++-dev
+
+ -- Marc Leeman <m.leeman@televic.com>  Tue, 20 Jul 2021 09:20:48 +0200
+
 onvif-srvd (1.1.0~televic10+5) buster-televic-unstable; urgency=medium
 
   * data: run device discovery on port 80 for windows tool
