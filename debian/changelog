@@ -1,3 +1,11 @@
+onvif-srvd (1.1.0~televic12+3) bookworm-televic-unstable; urgency=medium
+
+  * add pre-commit-config.yaml
+  * import gsoap 2.8.124 files
+  * MINI_BUILDD_OPTION: auto-ports=bullseye-televic-unstable
+
+ -- Marc Leeman <m.leeman@televic.com>  Thu, 20 Jul 2023 17:51:13 +0200
+
 onvif-srvd (1.1.0~televic11+2) bullseye-televic-unstable; urgency=medium
 
   * rebuild
