@@ -1,13 +1,13 @@
 /*
         dom.c[pp]
 
-        DOM API v5 gSOAP 2.8.104
+        DOM API v5 gSOAP 2.8.124
 
         See gsoap/doc/dom/html/index.html for the new DOM API v5 documentation
         Also located in /gsoap/samples/dom/README.md
 
 gSOAP XML Web services tools
-Copyright (C) 2000-2020, Robert van Engelen, Genivia, Inc. All Rights Reserved.
+Copyright (C) 2000-2022, Robert van Engelen, Genivia, Inc. All Rights Reserved.
 This part of the software is released under ONE of the following licenses:
 GPL or the gSOAP public license.
 --------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
 
 The Initial Developer of the Original Code is Robert A. van Engelen.
-Copyright (C) 2000-2020, Robert van Engelen, Genivia Inc., All Rights Reserved.
+Copyright (C) 2000-2022, Robert van Engelen, Genivia Inc., All Rights Reserved.
 --------------------------------------------------------------------------------
 GPL license.
 
@@ -50,7 +50,7 @@ A commercial use license is available from Genivia, Inc., contact@genivia.com
 */
 
 /** Compatibility requirement with gSOAP engine version */
-#define GSOAP_LIB_VERSION 208104
+#define GSOAP_LIB_VERSION 208124
 
 #include "stdsoap2.h"
 
@@ -171,7 +171,7 @@ void
 SOAP_FMAC4
 soap_traverse_xsd__anyType(struct soap *soap, struct soap_dom_element *node, const char *s, soap_walker p, soap_walker q)
 {
-  (void)soap; (void)node; (void)s; (void)p; (void)q; 
+  (void)soap; (void)node; (void)s; (void)p; (void)q;
 }
 
 /******************************************************************************/
@@ -189,7 +189,7 @@ void
 SOAP_FMAC2
 soap_traverse_xsd__anyAttribute(struct soap *soap, struct soap_dom_attribute *node, const char *s, soap_walker p, soap_walker q)
 {
-  (void)soap; (void)node; (void)s; (void)p; (void)q; 
+  (void)soap; (void)node; (void)s; (void)p; (void)q;
 }
 
 /******************************************************************************/
@@ -230,7 +230,7 @@ soap_default_xsd__anyAttribute(struct soap *soap, struct soap_dom_attribute *nod
 
 /******************************************************************************/
 
-static int 
+static int
 out_element(struct soap *soap, const struct soap_dom_element *node, const char *prefix, const char *name)
 {
   DBGLOG(TEST, SOAP_MESSAGE(fdebug, "DOM node lead '%s'\n", node->lead ? node->lead : ""));
@@ -306,7 +306,7 @@ out_element(struct soap *soap, const struct soap_dom_element *node, const char *
   {
     soap_mode m = soap->mode;
     if ((soap->mode & SOAP_DOM_ASIS))
-      soap->mode &= ~SOAP_XML_INDENT;
+      soap->mode &= ~(SOAP_XML_INDENT | SOAP_XML_DEFAULTNS);
     (void)soap_element(soap, name, 0, NULL);
     soap->mode = m;
   }
@@ -318,10 +318,10 @@ out_element(struct soap *soap, const struct soap_dom_element *node, const char *
 static int
 out_attribute(struct soap *soap, const char *prefix, const char *name, const char *text, int isearly)
 {
+  int err = SOAP_OK;
   char *s;
   const char *t;
   size_t l;
-  int err;
   if (!text)
     text = "";
   if (!prefix || !*prefix)
@@ -349,7 +349,7 @@ out_attribute(struct soap *soap, const char *prefix, const char *name, const cha
     s = (char*)SOAP_MALLOC(soap, l + 2);
     if (!s)
       return soap->error = SOAP_EOM;
-  } 
+  }
   (SOAP_SNPRINTF(s, l + 2, l + 1), "%s:%s", prefix, t);
   if (isearly)
     err = soap_set_attr(soap, s, text, 2);
@@ -371,7 +371,11 @@ soap_out_xsd__anyType(struct soap *soap, const char *tag, int id, const struct s
   if (node)
   {
     const char *prefix; /* namespace prefix, if namespace is present */
-    if (!(soap->mode & SOAP_DOM_ASIS) && !(soap->mode & SOAP_XML_CANONICAL))
+    if (node->name)
+      tag = node->name;
+    else if (!tag)
+      tag = "-";
+    if (*tag != '-' && !(soap->mode & SOAP_DOM_ASIS) && !(soap->mode & SOAP_XML_CANONICAL))
     {
       const struct soap_dom_attribute *att;
       for (att = node->atts; att; att = att->next)
@@ -388,10 +392,6 @@ soap_out_xsd__anyType(struct soap *soap, const char *tag, int id, const struct s
         }
       }
     }
-    if (node->name)
-      tag = node->name;
-    else if (!tag)
-      tag = "-";
     DBGLOG(TEST, SOAP_MESSAGE(fdebug, "DOM node '%s' start at level=%u\n", tag, soap->level));
     prefix = NULL;
     if (!(soap->mode & SOAP_DOM_ASIS))
@@ -423,42 +423,48 @@ soap_out_xsd__anyType(struct soap *soap, const char *tag, int id, const struct s
       return soap->error;
     if (!node->type || !node->node)
     {
-      struct soap_dom_attribute *att;
       struct soap_dom_element *elt;
-      for (att = node->atts; att; att = att->next)
+      if (*tag != '-')
       {
-        if (att->name)
+        struct soap_dom_attribute *att;
+        for (att = node->atts; att; att = att->next)
         {
-          if (!(soap->mode & SOAP_DOM_ASIS))
+          if (att->name)
           {
-            const char *p = NULL;
-            if (strncmp(att->name, "xml", 3))
+            if (!(soap->mode & SOAP_XML_CANONICAL) || strcmp(att->name, "xmlns") || (!prefix && !strchr(tag, ':')))
             {
-              if (att->nstr)
-                p = soap_prefix_of(soap, att->nstr);
-              if (!p)
+              if (!(soap->mode & SOAP_DOM_ASIS))
               {
-                const struct soap_nlist *np;
-                size_t n = 0;
-                p = strchr(att->name, ':');
-                if (p)
-                  n = p - att->name;
-                p = NULL;
-                np = soap_lookup_ns(soap, att->name, n);
-                if ((n && !np) || (att->nstr && (!np || !np->ns || strcmp(att->nstr, np->ns))))
+                const char *p = NULL;
+                if (strncmp(att->name, "xml", 3))
                 {
-                  p = soap_push_prefix(soap, att->name, n, att->nstr, 0, 0);
+                  if (att->nstr)
+                    p = soap_prefix_of(soap, att->nstr);
                   if (!p)
-                    return soap->error;
+                  {
+                    const struct soap_nlist *np;
+                    size_t n = 0;
+                    p = strchr(att->name, ':');
+                    if (p)
+                      n = p - att->name;
+                    p = NULL;
+                    np = soap_lookup_ns(soap, att->name, n);
+                    if ((n && !np) || (att->nstr && (!np || !np->ns || strcmp(att->nstr, np->ns))))
+                    {
+                      p = soap_push_prefix(soap, att->name, n, att->nstr, 0, 0);
+                      if (!p)
+                        return soap->error;
+                    }
+                  }
                 }
+                if (out_attribute(soap, p, att->name, att->text, 0))
+                  return soap->error;
+              }
+              else if (soap_attribute(soap, att->name, att->text))
+              {
+                return soap->error;
               }
             }
-            if (out_attribute(soap, p, att->name, att->text, 0))
-              return soap->error;
-          }
-          else if (soap_attribute(soap, att->name, att->text))
-          {
-            return soap->error;
           }
         }
       }
@@ -498,6 +504,7 @@ soap_out_xsd__anyType(struct soap *soap, const char *tag, int id, const struct s
         }
         else
         {
+          int err = SOAP_OK;
           char *s;
           size_t l = strlen(prefix) + strlen(tag);
           if (l + 2 < l || (SOAP_MAXALLOCSIZE > 0 && l + 2 > SOAP_MAXALLOCSIZE))
@@ -514,10 +521,11 @@ soap_out_xsd__anyType(struct soap *soap, const char *tag, int id, const struct s
           }
           DBGLOG(TEST, SOAP_MESSAGE(fdebug, "DOM node '%s' end\n", tag));
           (SOAP_SNPRINTF(s, l + 2, l + 1), "%s:%s", prefix, tag);
-          if (soap_element_end_out(soap, s))
-            return soap->error;
+          err = soap_element_end_out(soap, s);
           if (s != soap->msgbuf)
             SOAP_FREE(soap, s);
+          if (err)
+            return err;
         }
       }
     }
@@ -739,7 +747,7 @@ soap_in_xsd__anyType(struct soap *soap, const char *tag, struct soap_dom_element
       }
       elt = &(*elt)->next;
     }
-    if (!node->text && !node->elts)
+    if (!node->text && !node->code && !node->elts)
       node->tail = ""; /* has body so tail is non-NULL for non-empty element tag */
     DBGLOG(TEST, SOAP_MESSAGE(fdebug, "DOM node '%s' end (level=%u)\n", node->name, soap->level));
     if (soap_element_end_in(soap, NULL))
@@ -1057,7 +1065,7 @@ soap_prefix_of(struct soap *soap, const char *ns)
 {
   struct soap_nlist *np;
   for (np = soap->nlist; np; np = np->next)
-    if (np->ns && !strcmp(np->ns, ns)) 
+    if (np->ns && !strcmp(np->ns, ns))
       return np->id;
   return NULL;
 }
@@ -1136,6 +1144,8 @@ soap_ns_to_find(struct soap *soap, const char *tag)
 static int soap_tag_match(const char *name, const char *tag)
 {
   const char *s;
+  if (!tag)
+    return 0;
   if (!name)
     return !*tag;
   s = strchr(name, ':');
@@ -1152,6 +1162,8 @@ static int soap_tag_match(const char *name, const char *tag)
 static int soap_patt_match(const char *name, const char *patt)
 {
   const char *s;
+  if (!patt)
+    return 0;
   if (!name)
     return !*patt;
   s = strchr(name, ':');
@@ -1167,29 +1179,30 @@ static int soap_patt_match(const char *name, const char *patt)
 
 static int soap_name_match(const char *name, const char *patt)
 {
+  const char *a = NULL;
+  const char *b = NULL;
   for (;;)
   {
     int c1 = *name;
     int c2 = *patt;
     if (!c1)
       break;
-    if (c1 != c2)
+    if (c2 == '*')
     {
-      if (c2 != '*')
-        return 0;
       c2 = *++patt;
       if (!c2)
         return 1;
-      for (;;)
-      {
-        c1 = *name;
-        if (!c1)
-          break;
-        if (c1 == c2 && soap_name_match(name + 1, patt + 1))
-          return 1;
-        name++;
-      }
-      break;
+      a = name;
+      b = patt;
+      continue;
+    }
+    if (c1 != c2)
+    {
+      if (!a)
+        return 0;
+      name = ++a;
+      patt = b;
+      continue;
     }
     name++;
     patt++;
@@ -1513,7 +1526,7 @@ soap_nth(struct soap_dom_element *elt, size_t n)
     }
     prev = node;
   }
-  while (--n >= 1)
+  while (n-- > 1)
   {
     node = new_element(elt->soap);
     node->next = prev->next;
@@ -3274,8 +3287,9 @@ soap_dom_find_next(const struct soap_dom_element *elt, const struct soap_dom_ele
 @param soap context to manage IO
 @param endpoint server URL
 @param optional SOAP Action or NULL
-@param in request XML to be send to server, or NULL for GET or DELETE (both in and out are NULL)
-@param out response to be populated with response XML received from server, or NULL for PUT or DELETE (both in and out are NULL)
+@param in request XML to send to server, or NULL for GET or DELETE (for DELETE both in and out should be NULL)
+@param out response to populate with response XML received from server, or NULL for PUT or DELETE (for DELETE both in and out should be NULL)
+@return SOAP_OK or error code
 */
 SOAP_FMAC1
 int
@@ -3304,7 +3318,9 @@ soap_dom_call(struct soap *soap, const char *endpoint, const char *action, const
       (void)soap_end_recv(soap);
     }
     else if (soap->error == 200 || soap->error == 201 || soap->error == 202)
+    {
       soap->error = SOAP_OK;
+    }
     return soap_closesock(soap);
   }
   if (soap_begin_recv(soap)
@@ -3374,6 +3390,9 @@ struct soap_dom_attribute
 
   /** iterator over attribute list */
   typedef soap_dom_attribute_iterator iterator;
+
+  /** const_iterator over attribute list */
+  typedef soap_dom_attribute_iterator const_iterator;
 
   /**
   @brief Construct new xsd__anyAttribute DOM attribute that is empty (must be set later)
@@ -3707,41 +3726,61 @@ struct soap_dom_attribute
   */
   operator const char*() const;
   /**
+  @brief Return const_iterator to begin of attribute nodes starting with this attribute, same as att_begin()
+  @return xsd__anyAttribute::iterator
+  */
+  soap_dom_attribute::iterator cbegin();
+  /**
+  @brief Return const_iterator to end of attribute nodes, same as att_end()
+  @return xsd__anyAttribute::iterator
+  */
+  soap_dom_attribute::iterator cend();
+  /**
+  @brief Return iterator to begin of attribute nodes starting with this attribute, same as att_begin()
+  @return xsd__anyAttribute::iterator
+  */
+  soap_dom_attribute::iterator begin();
+  /**
+  @brief Return iterator to end of attribute nodes, same as att_end()
+  @return xsd__anyAttribute::iterator
+  */
+  soap_dom_attribute::iterator end();
+  /**
   @brief Return iterator to begin of attribute nodes starting with this attribute
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_begin();
+  soap_dom_attribute::iterator att_begin();
   /**
   @brief Return iterator to end of attribute nodes
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_end();
+  soap_dom_attribute::iterator att_end();
   /**
   @brief Return iterator to search for matching attributes of this node, same as att_find(NULL, patt)
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *patt);
+  soap_dom_attribute::iterator att_find(const char *patt);
   /**
   @brief Return iterator to search for matching attributes of this node, same as att_find(NULL, patt)
   @param patt (un)qualified tag name wide string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const wchar_t *patt);
+  soap_dom_attribute::iterator att_find(const wchar_t *patt);
   /**
   @brief Return iterator to search for matching attributes of this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *ns, const char *patt);
+  soap_dom_attribute::iterator att_find(const char *ns, const char *patt);
   /**
   @brief Return iterator to search for matching attributes of this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *ns, const wchar_t *patt);
+  soap_dom_attribute::iterator att_find(const char *ns, const wchar_t *patt);
   void unlink();
 };
 
@@ -3772,6 +3811,9 @@ struct soap_dom_element
 
   /** iterator over sibling element node list */
   typedef soap_dom_element_iterator iterator;
+
+  /** const_iterator over sibling element node list */
+  typedef soap_dom_element_iterator const_iterator;
 
   /**
   @brief Construct new xsd__anyType DOM element
@@ -4389,49 +4431,59 @@ struct soap_dom_element
   */
   operator const char*() const;
   /**
+  @brief Return const_iterator to begin of deep depth-first node graph traversal starting with this node
+  @return xsd__anyType::iterator
+  */
+  soap_dom_element::const_iterator cbegin();
+  /**
+  @brief Return const_iterator to end of deep depth-first tnode graph traversal
+  @return xsd__anyType::iterator
+  */
+  soap_dom_element::const_iterator cend();
+  /**
   @brief Return iterator to begin of deep depth-first node graph traversal starting with this node
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator begin();
+  soap_dom_element::iterator begin();
   /**
   @brief Return iterator to end of deep depth-first tnode graph traversal
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator end();
+  soap_dom_element::iterator end();
   /**
   @brief Return iterator to begin of child element nodes
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_begin();
+  soap_dom_element::iterator elt_begin();
   /**
   @brief Return iterator to end of child element nodes
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_end();
+  soap_dom_element::iterator elt_end();
   /**
   @brief Return iterator to begin of attribute nodes
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_begin();
+  soap_dom_attribute::iterator att_begin();
   /**
   @brief Return iterator to end of attribute nodes
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_end();
+  soap_dom_attribute::iterator att_end();
   /**
   @brief Return iterator to search deep depth-first over node graph starting from this node, same as find(NULL, patt, type)
   @param patt (un)qualified tag name string pattern (use '@' to match attributes, NULL, "*", and "*:*" match any, "" matches unnamed node)
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator find(const char *patt, int type = 0);
+  soap_dom_element::iterator find(const char *patt, int type = 0);
   /**
   @brief Return iterator to search deep depth-first over node graph starting from this node, same as find(NULL, patt, type)
   @param patt (un)qualified tag name wide string pattern (use '@' to match attributes, NULL, "*", and "*:*" match any, "" matches unnamed node)
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator find(const wchar_t *patt, int type = 0);
+  soap_dom_element::iterator find(const wchar_t *patt, int type = 0);
   /**
   @brief Return iterator to search deep depth-first over node graph starting from this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
@@ -4439,7 +4491,7 @@ struct soap_dom_element
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator find(const char *ns, const char *patt, int type = 0);
+  soap_dom_element::iterator find(const char *ns, const char *patt, int type = 0);
   /**
   @brief Return iterator to search deep depth-first over node graph starting from this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
@@ -4447,27 +4499,27 @@ struct soap_dom_element
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator find(const char *ns, const wchar_t *patt, int type = 0);
+  soap_dom_element::iterator find(const char *ns, const wchar_t *patt, int type = 0);
   /**
   @brief Return iterator to search deep depth-first over node graph to find deserialized objects, starting from this node
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator find(int type);
+  soap_dom_element::iterator find(int type);
   /**
   @brief Return iterator to search for matching child elements of this node, same as elt_find(NULL, patt, type)
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any, "" matches unnamed node)
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_find(const char *patt, int type = 0);
+  soap_dom_element::iterator elt_find(const char *patt, int type = 0);
   /**
   @brief Return iterator to search for matching child elements of this node, same as elt_find(NULL, patt, type)
   @param patt (un)qualified tag name wide string pattern (NULL, "*", and "*:*" match any, "" matches unnamed node)
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_find(const wchar_t *patt, int type = 0);
+  soap_dom_element::iterator elt_find(const wchar_t *patt, int type = 0);
   /**
   @brief Return iterator to search for matching child elements of this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
@@ -4475,7 +4527,7 @@ struct soap_dom_element
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_find(const char *ns, const char *patt, int type = 0);
+  soap_dom_element::iterator elt_find(const char *ns, const char *patt, int type = 0);
   /**
   @brief Return iterator to search for matching child elements of this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
@@ -4483,39 +4535,39 @@ struct soap_dom_element
   @param type optional SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_find(const char *ns, const wchar_t *patt, int type = 0);
+  soap_dom_element::iterator elt_find(const char *ns, const wchar_t *patt, int type = 0);
   /**
   @brief Return iterator to search for child elements of this node that have deserialized objects
   @param type SOAP_TYPE_T type of deserialized object of type T to match or 0
   @return xsd__anyType::iterator
   */
-  soap_dom_element_iterator elt_find(int type);
+  soap_dom_element::iterator elt_find(int type);
   /**
   @brief Return iterator to search for matching attributes of this node
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any, "" matches unnamed node)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *patt);
+  soap_dom_attribute::iterator att_find(const char *patt);
   /**
   @brief Return iterator to search for matching attributes of this node, same as att_find(NULL, patt)
   @param patt (un)qualified tag name wide string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const wchar_t *patt);
+  soap_dom_attribute::iterator att_find(const wchar_t *patt);
   /**
   @brief Return iterator to search for matching attributes of this node, same as att_find(NULL, patt)
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
   @param patt (un)qualified tag name string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *ns, const char *patt);
+  soap_dom_attribute::iterator att_find(const char *ns, const char *patt);
   /**
   @brief Return iterator to search for matching attributes of this node
   @param ns namespace URI string pattern ("*" matches any, "" matches the null (empty) namespace, NULL matches the null (empty) namespace if tag is unqualified or the namespace from namespace table if tag is qualified)
   @param patt (un)qualified tag name wide string pattern (NULL, "*", and "*:*" match any)
   @return xsd__anyAttribute::iterator
   */
-  soap_dom_attribute_iterator att_find(const char *ns, const wchar_t *patt);
+  soap_dom_attribute::iterator att_find(const char *ns, const wchar_t *patt);
   void unlink();
 };
 
@@ -4688,9 +4740,9 @@ soap_dom_element::~soap_dom_element()
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::begin()
+soap_dom_element::iterator soap_dom_element::begin()
 {
-  soap_dom_element_iterator iter = soap_dom_element_iterator(this);
+  soap_dom_element::iterator iter = soap_dom_element::iterator(this);
   iter.stop = this;
   iter.deep = true;
   return iter;
@@ -4698,23 +4750,23 @@ soap_dom_element_iterator soap_dom_element::begin()
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::find(const char *ns, const char *patt, int type)
+soap_dom_element::iterator soap_dom_element::find(const char *ns, const char *pat, int typ)
 {
-  soap_dom_element_iterator iter(soap_dom_find(this, this, ns, patt, type));
+  soap_dom_element::iterator iter(soap_dom_find(this, this, ns, pat, typ));
   iter.stop = this;
   iter.nstr = ns;
-  iter.name = patt;
-  iter.type = type;
+  iter.name = pat;
+  iter.type = typ;
   iter.deep = true;
   return iter;
 }
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::find(const char *ns, const wchar_t *tag, int type)
+soap_dom_element::iterator soap_dom_element::find(const char *ns, const wchar_t *tag, int typ)
 {
   const char *s = soap_wchar2s(NULL, tag);
-  soap_dom_element_iterator iter = this->find(ns, s, type);
+  soap_dom_element::iterator iter = this->find(ns, s, typ);
   if (s)
     free((void*)s);
   return iter;
@@ -4722,28 +4774,28 @@ soap_dom_element_iterator soap_dom_element::find(const char *ns, const wchar_t *
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::find(int type)
+soap_dom_element::iterator soap_dom_element::find(int typ)
 {
-  return this->find((const char*)NULL, (const char*)NULL, type);
+  return this->find((const char*)NULL, (const char*)NULL, typ);
 }
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::elt_find(const char *ns, const char *patt, int type)
+soap_dom_element::iterator soap_dom_element::elt_find(const char *ns, const char *pat, int typ)
 {
-  soap_dom_element_iterator iter(soap_elt_find_type(this, ns, patt, type));
+  soap_dom_element::iterator iter(soap_elt_find_type(this, ns, pat, typ));
   iter.nstr = ns;
-  iter.name = patt;
-  iter.type = type;
+  iter.name = pat;
+  iter.type = typ;
   return iter;
 }
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::elt_find(const char *ns, const wchar_t *patt, int type)
+soap_dom_element::iterator soap_dom_element::elt_find(const char *ns, const wchar_t *pat, int typ)
 {
-  const char *s = soap_wchar2s(NULL, patt);
-  soap_dom_element_iterator iter = this->elt_find(ns, s, type);
+  const char *s = soap_wchar2s(NULL, pat);
+  soap_dom_element::iterator iter = this->elt_find(ns, s, typ);
   if (s)
     free((void*)s);
   return iter;
@@ -4751,27 +4803,27 @@ soap_dom_element_iterator soap_dom_element::elt_find(const char *ns, const wchar
 
 /******************************************************************************/
 
-soap_dom_element_iterator soap_dom_element::elt_find(int type)
+soap_dom_element::iterator soap_dom_element::elt_find(int typ)
 {
-  return this->elt_find((const char*)NULL, (const char*)NULL, type);
+  return this->elt_find((const char*)NULL, (const char*)NULL, typ);
 }
 
 /******************************************************************************/
 
-soap_dom_attribute_iterator soap_dom_element::att_find(const char *ns, const char *patt)
+soap_dom_attribute::iterator soap_dom_element::att_find(const char *ns, const char *pat)
 {
-  soap_dom_attribute_iterator iter(soap_att_find(this, ns, patt));
+  soap_dom_attribute::iterator iter(soap_att_find(this, ns, pat));
   iter.nstr = ns;
-  iter.name = patt;
+  iter.name = pat;
   return iter;
 }
 
 /******************************************************************************/
 
-soap_dom_attribute_iterator soap_dom_element::att_find(const char *ns, const wchar_t *patt)
+soap_dom_attribute::iterator soap_dom_element::att_find(const char *ns, const wchar_t *pat)
 {
-  const char *s = soap_wchar2s(NULL, patt);
-  soap_dom_attribute_iterator iter = this->att_find(ns, s);
+  const char *s = soap_wchar2s(NULL, pat);
+  soap_dom_attribute::iterator iter = this->att_find(ns, s);
   if (s)
     free((void*)s);
   return iter;
@@ -4909,14 +4961,14 @@ soap_dom_attribute::~soap_dom_attribute()
 
 /******************************************************************************/
 
-soap_dom_attribute_iterator soap_dom_attribute::att_find(const char *ns, const char *patt)
+soap_dom_attribute::iterator soap_dom_attribute::att_find(const char *ns, const char *pat)
 {
-  soap_dom_attribute_iterator iter(this);
+  soap_dom_attribute::iterator iter(this);
   iter.nstr = ns;
-  iter.name = patt;
-  if (patt)
+  iter.name = pat;
+  if (pat)
   {
-    if (!soap_patt_match(this->name, patt))
+    if (!soap_patt_match(this->name, pat))
       return ++iter;
     if (ns && (!this->nstr || strcmp(this->nstr, ns)))
       return ++iter;
@@ -4928,10 +4980,10 @@ soap_dom_attribute_iterator soap_dom_attribute::att_find(const char *ns, const c
 
 /******************************************************************************/
 
-soap_dom_attribute_iterator soap_dom_attribute::att_find(const char *ns, const wchar_t *patt)
+soap_dom_attribute::iterator soap_dom_attribute::att_find(const char *ns, const wchar_t *pat)
 {
-  const char *s = soap_wchar2s(NULL, patt);
-  soap_dom_attribute_iterator iter = this->att_find(ns, s);
+  const char *s = soap_wchar2s(NULL, pat);
+  soap_dom_attribute::iterator iter = this->att_find(ns, s);
   if (s)
     free((void*)s);
   return iter;
